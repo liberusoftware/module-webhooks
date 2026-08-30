@@ -17,6 +17,7 @@ final readonly class DeliverWebhook
     public function handle(WebhookDelivery $delivery): WebhookDelivery
     {
         $endpoint = $delivery->endpoint;
+        abort_unless($endpoint !== null, 404);
         $body = json_encode(['id' => $delivery->event_id, 'type' => $delivery->event, 'data' => $delivery->payload], JSON_THROW_ON_ERROR);
         $timestamp = time();
         $delivery->increment('attempts');
