@@ -17,9 +17,9 @@ beforeEach(function (): void {
 });
 
 it('registers, queues, delivers, and rotates webhook endpoints', function (): void {
-    Http::fake(['https://example.test/*' => Http::response('accepted', 202)]);
+    Http::fake(['https://8.8.8.8/*' => Http::response('accepted', 202)]);
 
-    $endpoint = app(RegisterEndpoint::class)->handle('owner-1', 'https://example.test/hooks', ['post.created'], 'initial-secret');
+    $endpoint = app(RegisterEndpoint::class)->handle('owner-1', 'https://8.8.8.8/hooks', ['post.created'], 'initial-secret');
     expect($endpoint)->toBeInstanceOf(WebhookEndpoint::class)
         ->and(app(SigningSecretVault::class)->open($endpoint->signing_secret))->toBe('initial-secret');
 
@@ -47,3 +47,14 @@ it('uses bounded exponential retry delays', function (): void {
 it('rejects invalid endpoint registration', function (): void {
     app(RegisterEndpoint::class)->handle('owner-1', 'ftp://example.test/hooks', ['post.created']);
 })->throws(InvalidArgumentException::class);
+
+it('never sends webhook payloads to an internal destination', function (): void {
+    Http::fake();
+    app(RegisterEndpoint::class)->handle('owner-1', 'http://169.254.169.254/latest/meta-data/', ['post.created']);
+    app(QueueWebhook::class)->handle('00000000-0000-0000-0000-000000000001', 'post.created', ['private' => 'payload']);
+
+    $delivery = app(DeliverWebhook::class)->handle(WebhookDelivery::query()->firstOrFail());
+
+    expect($delivery->status)->toBe('failed');
+    Http::assertNothingSent();
+});
