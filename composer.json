@@ -6,7 +6,6 @@
   "require": {
     "php": "^8.5",
     "illuminate/database": "^13.38.0",
-    "illuminate/http": "^13.38.0",
     "illuminate/support": "^13.38.0",
     "liberusoftware/module-manager": "^1.0"
   },
@@ -20,7 +19,7 @@
       "name": "webhooks"
     }
   },
-  "version": "1.4.6",
+  "version": "1.4.7",
   "autoload-dev": {
     "psr-4": {
       "Liberu\\Foundation\\Webhooks\\Tests\\": "tests/"
